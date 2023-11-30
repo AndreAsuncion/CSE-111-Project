@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loadouts</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <form action="/filter_loadouts" method="post">
+        <label for="armor">Choose Armor:</label>
+        <select name="armor" id="armor">
+            <option value="">Select Armor</option>
+            {% for armor_key, armor_name in armors %}
+            <option value="{{ armor_key }}">{{ armor_name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="trader">Choose Trader:</label>
+        <select name="trader" id="trader">
+            <option value="">Select Trader</option>
+            {% for trader_key, trader_name in traders %}
+                <option value="{{ trader_key }}">{{ trader_name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="weapon">Choose Weapon:</label>
+        <select name="weapon" id="weapon">
+            <option value="">Select Weapon</option>
+            {% for weapon in weapons %}
+                <option value="{{ weapon[0] }}">{{ weapon[0] }}</option>
+            {% endfor %}
+        </select>
+
+        <input type="submit" value="Filter">
+    </form>
+</body>
+</html>
