@@ -119,9 +119,60 @@ def index():
         .distinct().all()
     
     weapons = Loadout.query.with_entities(Loadout.l_WeaponName).distinct().all()
+    weapon_names = [weapon[0] for weapon in weapons]
     
+    return render_template('index.html', armors=distinct_armors, traders=distinct_traders, weapons=weapon_names)
+
+@app.route('/filter_loadouts', methods=['POST'])
+def filter_loadouts():
+    selected_armor = request.form['armor']
+    selected_trader = request.form['trader']
+    selected_weapon = request.form['weapon']
+
+    distinct_armors = db.session.query(Armor.a_armorKey, Armor.a_armorName) \
+        .join(Loadout, Loadout.l_ArmorKey == Armor.a_armorKey) \
+        .distinct().all()
     
-    return render_template('index.html', armors=distinct_armors, traders=distinct_traders, weapons=weapons)
+    distinct_traders = db.session.query(Loadout.l_traderKey, Trader.t_traderName) \
+        .join(Trader, Loadout.l_traderKey == Trader.t_traderKey) \
+        .distinct().all()
+    
+    weapons = Loadout.query.with_entities(Loadout.l_WeaponName).distinct().all()
+    weapon_names = [weapon[0] for weapon in weapons]
+
+    filters = []
+
+    if selected_armor:
+        filters.append(Loadout.l_ArmorKey == selected_armor)
+    if selected_trader:
+        filters.append(Loadout.l_traderKey == selected_trader)
+    if selected_weapon:
+        filters.append(Loadout.l_WeaponName == selected_weapon)
+
+    if filters:
+        filtered_loadouts = Loadout.query.filter(*filters).all()
+    else:
+        filtered_loadouts = Loadout.query.all()
+
+    loadout_info = []
+    for loadout in filtered_loadouts:
+        armor_name = Armor.query.filter_by(a_armorKey=loadout.l_ArmorKey).first().a_armorName
+        trader_name = Trader.query.filter_by(t_traderKey=loadout.l_traderKey).first().t_traderName
+        weapon_name = loadout.l_WeaponName
+        loadout_info.append({
+            'loadout_name': loadout.l_loadoutName,
+            'armor_name': armor_name,
+            'trader_name': trader_name,
+            'weapon_name': weapon_name
+        })
+
+    return render_template(
+        'index.html',
+        armors=distinct_armors,
+        traders=distinct_traders,
+        weapons=weapon_names,
+        loadout_info=loadout_info,
+    )
 
 if __name__ == '__main__':
     app.run(debug=True)

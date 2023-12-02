@@ -1,0 +1,134 @@
+1. What are the name of traders who sell armor made with material 'Aramid'.
+    select t_traderName as name 
+    from trader join armor join material 
+    on t_traderKey=a_traderKey and a_materialKey=m_materialKey
+    where m_materialName='Aramid';
+
+2. How many loadouts have armor that are enhanced to 'Light Vest'.
+    select count(l_loadoutKey) as loadouts
+    from loadout join armor join enhancement
+    on l_ArmorKey=a_armorKey and a_enchancementKey=e_enhanceKey
+    where e_enhanceName='Light Vest';
+
+3. Which loadouts have armors enhanced by 10%, and have a weight of 10.7.
+    select l_loadoutName as loadouts
+    from loadout join armor join enhancement join penalty join material
+    on l_ArmorKey=a_armorKey and a_enchancementKey=e_enhanceKey and a_penaltieKey=p_penaltyKey and a_materialKey=m_materialKey
+    where e_percent='10' and p_weight='10.7' and m_materialName='Aluminium';
+
+
+4. Which penalties are applied to armor Paca, the armors can only be made out of Aramid material
+    select p_penaltyName as penalties
+    from penalty join armor join material
+    on a_materialKey=m_materialKey and a_penaltieKey=p_penaltyKey
+    where a_armorName='Paca' and m_materialName='Aramid';
+
+5. What is the average price for armors sold by 'Ragman'.
+    select avg(a_price) as price_avg
+    from armor join trader
+    on t_traderKey=a_traderKey
+    where t_traderName='Ragman';
+
+6. What is the maximum repair rate for materials on armors where their movement penalty is '-1'.
+    select max(m_repairRate) as repairRate_max
+    from material join armor join penalty
+    on m_materialKey=a_materialKey and a_penaltieKey=p_penaltyKey
+    where p_movement='-1';
+
+7. How many distinct traders are selling each set of armors that appear in the 'Medic' loadout and have enhancement level 50.
+    select count(distinct t_traderKey) as traders, a_armorName as armors
+    from trader join loadout join enhancement join armor
+    on t_traderKey=a_traderKey and a_armorKey=l_ArmorKey and a_enchancementKey=e_enhanceKey
+    where l_loadoutName='Medic' and e_level='50'
+    group by armors;
+
+8. What is the average weight for penalties for each armor with 'Light Vest' enhancement, found in 'Throax'.
+    select avg(p_weight) as weight_avg, a_armorName as armors
+    from penalty join armor join enhancement
+    on p_penaltyKey=a_penaltieKey and a_enchancementKey=e_enhanceKey
+    where e_enhanceName='Light Vest' and a_zone like '%Throax%';
+
+9. Who is the trader with the most sell posts for armor sets?
+    select t_traderName as trader, armors
+    from trader join (
+        select count(a_armorKey) as armors, a_armorkey
+        from armor
+    ) subq
+    on t_traderKey=subq.a_armorKey
+    group by trader
+    limit 1;
+
+10. What is the cheapest armor you can buy in any loadout, sold from 'Peace Keeper' and has lightest weight from penalty weight?
+    select min(a_price) as cheapest_armor
+    from armor join loadout join trader join penalty
+    on a_armorKey=l_ArmorKey and a_traderKey=t_traderKey and a_penaltieKey=p_penaltyKey
+    where t_traderName='Peace Keeper' and p_weight=(select min(p_weight) from penalty)
+    limit 1;
+
+11. What is the average price for every armor set?
+    select a_armorName as armor, avg(a_price) as price_avg
+    from armor
+    group by armor;
+    
+12. Who is the trader with the most amount of sell posts for 'Paca' armor?
+    select t_traderName as trader  
+    from trader join armor
+    on t_traderKey=a_traderKey
+    where a_armorName='Paca'
+    group by trader
+    having (select count(t_traderName) as trader_cnt from trader order by trader_cnt)
+    limit 1;
+
+13. How many enhancements are applied to armors in the 'Medic' loadout?
+    select count(e_enhanceKey) as enhance_cnt
+    from enhancement join armor join loadout
+    on e_enhanceKey=a_enchancementKey and l_ArmorKey=a_armorkey
+    where l_loadoutName='Medic';
+
+14. How many distinct traders are selling the cheapest 'CQC Osprey' armor? # Not completely sure if this one is correct
+    select distinct t_traderName as trader, min(a_price)
+    from trader join armor
+    on t_traderKey=a_traderKey
+    where a_armorName='CQC Osprey';
+
+15. What's the slowest material repair rate for armors sold by 'Ragman'
+    select min(m_repairRate) as slowest_repair
+    from material join trader join armor
+    on m_materialKey=a_materialKey and a_traderKey=t_traderKey
+    where t_traderName='Ragman'
+    limit 1;
+
+16. What's the armor with the slowest movement and turning penalties for armors offered in 'Enforcer' loadout?
+    select a_armorName, slowest_movement, slowest_turning
+    from armor join loadout join(
+        select min(p_movement) as slowest_movement, min(p_turning) as slowest_turning, p_penaltyKey
+        from penalty
+    ) subq
+    on a_armorKey=l_ArmorKey and subq.p_penaltyKey=a_penaltieKey
+    where l_loadoutName='Enforcer';
+
+17. Which distinct traders sells loadouts with 'Shotgun' weapon and 'CQC Osprey' armor?
+    select distinct t_traderName as trader
+    from trader join armor join loadout
+    on t_traderKey=a_traderKey and a_armorKey=l_ArmorKey
+    where l_WeaponName='Shotgun' and a_armorName='CQC Osprey';
+    
+
+18. How many 'Heavy' penalties are given to armors sold by 'Ragman' in the 'Enforcer' loadout?
+    select count(p_penaltyKey) as penalty_cnt
+    from penalty join armor join trader join loadout
+    on p_penaltyKey=a_penaltieKey and a_armorKey=l_ArmorKey and a_traderKey=t_traderKey
+    where p_penaltyName='Heavy' and t_traderName='Ragman' and l_loadoutName='Enforcer';
+
+19. What materials are offered to repair for all armors?
+    select m_materialName as material, a_armorName as armors
+    from material join armor
+    where m_materialKey=a_materialKey
+    group by material;
+
+20. What is the best durability for armors sold by 'Peace Keeper' with 'Light Vest' enhancement?
+    select a_armorName as armor, max(a_maxDur) as max_durability
+    from armor join trader join enhancement
+    on a_traderKey=t_traderKey and a_enchancementKey=e_enhanceKey
+    where t_traderName='Peace Keeper' and e_enhanceName='Light Vest'
+    group by armor;
