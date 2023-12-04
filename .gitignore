@@ -3,3 +3,6 @@ node_modules/
 
 package-lock.json
 package.json
+
+# Ignoring the tarkov.db because its a pain to keep these in parity
+instance/tarkov.db
