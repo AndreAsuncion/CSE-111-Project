@@ -96,13 +96,6 @@ class Penalty(db.Model):
         self.p_turning = p_turning
         self.p_ergo = p_ergo
         self.p_weight = p_weight
-        
-def calculate_repair_costs(a_currDur, a_maxDur, a_price, m_repairRate):
-    missing_dur = a_maxDur - a_currDur
-    repaired_dur = m_repairRate * missing_dur
-    total_cost = repaired_dur * (a_price/missing_dur)
-    fixed_durr = a_currDur + repaired_dur
-    return total_cost, fixed_durr
 
 with app.app_context():
     db.create_all()
@@ -129,48 +122,6 @@ def index():
     weapon_names = [weapon[0] for weapon in weapons]
     
     return render_template('index.html', armors=distinct_armors, traders=distinct_traders, weapons=weapon_names)
-
-@app.route('/calculator', methods=['GET', 'POST'])
-def calculator():
-
-    distinct_armors = db.session.query(Armor.a_armorKey, Armor.a_armorName) \
-        .join(Loadout, Loadout.l_ArmorKey == Armor.a_armorKey) \
-        .distinct().all()
-        
-    distinct_materials = db.session.query(Material.m_materialKey, Material.m_materialName, Material.m_repairRate) \
-        .join(Armor, Armor.a_materialKey == Material.m_materialKey) \
-        .distinct().all()
-    
-    distinct_traders = db.session.query(Loadout.l_traderKey, Trader.t_traderName) \
-        .join(Trader, Loadout.l_traderKey == Trader.t_traderKey) \
-        .distinct().all()
-    
-    if request.method == 'POST':
-        trader_key = request.form['trader']
-        armor_key = request.form['armor']
-        current_durability = int(request.form['durability'])
-
-        armor = Armor.query.filter_by(a_armorKey=armor_key).first()
-        
-        material = Material.query.filter_by(m_materialKey=armor.a_materialKey).first()
-
-        # Calculation
-        calculation = calculate_repair_costs(current_durability, armor.a_maxDur, armor.a_price, material.m_repairRate)
-        # calculation = calculate_repair_costs(1,2,3,4)
-
-        repair_info = [Trader.query.filter_by(t_traderKey=trader_key).first().t_traderName, armor.a_armorName, material.m_materialName, calculation[1], armor.a_maxDur]
-        # repair_info = [armor.a_armorName, material,3,4,5]
-
-        return render_template(
-            'calculator.html',
-            armors=distinct_armors,
-            traders=distinct_traders,
-            material = distinct_materials,
-            repair_info = repair_info,
-            cost = calculation[0],
-        )
-
-    return render_template('calculator.html', armors=distinct_armors, traders=distinct_traders, material = distinct_materials)
 
 @app.route('/filter_loadouts', methods=['POST'])
 def filter_loadouts():
@@ -222,6 +173,224 @@ def filter_loadouts():
         weapons=weapon_names,
         loadout_info=loadout_info,
     )
+
+@app.route('/armor')
+def armor():
+    distinct_traders = db.session.query(Trader.t_traderKey, Trader.t_traderName).distinct().all()
+
+    materials = db.session.query(Material.m_materialKey, Material.m_materialName).distinct().all()
+    enhancements = db.session.query(Enhancement.e_enhanceKey, Enhancement.e_enhanceName).distinct().all()
+    penalties = db.session.query(Penalty.p_penaltyKey, Penalty.p_penaltyName).distinct().all()
+
+    return render_template('armor.html', traders=distinct_traders, materials=materials,
+                           enhancements=enhancements, penalties=penalties)
+
+@app.route('/filter_armors', methods=['POST'])
+def filter_armors():
+    selected_trader = request.form['trader']
+    min_durability = request.form['min_durability']
+    max_durability = request.form['max_durability']
+    min_slots = request.form['min_slots']
+    max_slots = request.form['max_slots']
+    min_price = request.form['min_price']
+    max_price = request.form['max_price']
+    selected_zones = request.form.getlist('zones[]')
+    selected_material = request.form['material_key']
+    selected_enhancement = request.form['enhancement_key']
+    selected_penalty = request.form['penalty_key']
+
+    filters = []
+
+    if selected_trader:
+        filters.append(Armor.a_traderKey == selected_trader)
+
+    if min_durability:
+        filters.append(Armor.a_maxDur >= int(min_durability))
+    if max_durability:
+        filters.append(Armor.a_maxDur <= int(max_durability))
+
+    if min_slots:
+        filters.append(Armor.a_slots >= int(min_slots))
+    if max_slots:
+        filters.append(Armor.a_slots <= int(max_slots))
+
+    if min_price:
+        filters.append(Armor.a_price >= int(min_price))
+    if max_price:
+        filters.append(Armor.a_price <= int(max_price))
+
+    if selected_zones:
+        zone_filters = [Armor.a_zone.contains(zone) for zone in selected_zones]
+        filters.append(db.or_(*zone_filters))
+
+    if selected_material:
+        filters.append(Armor.a_materialKey == selected_material)
+    if selected_enhancement:
+        filters.append(Armor.a_enchancementKey == selected_enhancement)
+    if selected_penalty:
+        filters.append(Armor.a_penaltieKey == selected_penalty)
+
+    if filters:
+        filtered_armors = Armor.query.filter(*filters).all()
+    else:
+        filtered_armors = Armor.query.all()
+
+    armor_info = []
+    for armor in filtered_armors:
+        trader_name = Trader.query.filter_by(t_traderKey=armor.a_traderKey).first().t_traderName
+
+        material_name = Material.query.filter_by(m_materialKey=armor.a_materialKey).first().m_materialName
+        enhancement_name = Enhancement.query.filter_by(e_enhanceKey=armor.a_enchancementKey).first().e_enhanceName
+        penalty_name = Penalty.query.filter_by(p_penaltyKey=armor.a_penaltieKey).first().p_penaltyName
+        
+        armor_info.append({
+            'armor_name': armor.a_armorName,
+            'trader_name': trader_name,
+            'max_durability': armor.a_maxDur,
+            'slots': armor.a_slots,
+            'price': armor.a_price,
+            'zone': armor.a_zone,
+            'material_name': material_name,
+            'enhancement_name': enhancement_name,
+            'penalty_name': penalty_name
+        })
+
+    distinct_traders = db.session.query(Trader.t_traderKey, Trader.t_traderName).distinct().all()
+    materials = db.session.query(Material.m_materialKey, Material.m_materialName).distinct().all()
+    enhancements = db.session.query(Enhancement.e_enhanceKey, Enhancement.e_enhanceName).distinct().all()
+    penalties = db.session.query(Penalty.p_penaltyKey, Penalty.p_penaltyName).distinct().all()
+
+    return render_template(
+        'armor.html',
+        traders=distinct_traders,
+        armor_info=armor_info,
+        materials=materials,
+        enhancements=enhancements,
+        penalties=penalties,
+        selected_material=selected_material,  # Include the selected values
+        selected_enhancement=selected_enhancement,
+        selected_penalty=selected_penalty
+    )
+
+@app.route('/attribute')
+def attribute():
+    return render_template('attribute.html')
+
+@app.route('/filter_penalties', methods=['POST'])
+def filter_penalties():
+    min_movement = request.form.get('min_movement')
+    max_movement = request.form.get('max_movement')
+    min_turning = request.form.get('min_turning')
+    max_turning = request.form.get('max_turning')
+    min_ergo = request.form.get('min_ergo')
+    max_ergo = request.form.get('max_ergo')
+    min_weight = request.form.get('min_weight')
+    max_weight = request.form.get('max_weight')
+
+    filters = []
+
+    if min_movement:
+        filters.append(Penalty.p_movement >= int(min_movement))
+    if max_movement:
+        filters.append(Penalty.p_movement <= int(max_movement))
+
+    if min_turning:
+        filters.append(Penalty.p_turning >= int(min_turning))
+    if max_turning:
+        filters.append(Penalty.p_turning <= int(max_turning))
+
+    if min_ergo:
+        filters.append(Penalty.p_ergo >= int(min_ergo))
+    if max_ergo:
+        filters.append(Penalty.p_ergo <= int(max_ergo))
+
+    if min_weight:
+        filters.append(Penalty.p_weight >= int(min_weight))
+    if max_weight:
+        filters.append(Penalty.p_weight <= int(max_weight))
+
+    if filters:
+        filtered_penalties = Penalty.query.filter(*filters).all()
+    else:
+        filtered_penalties = Penalty.query.all()
+
+    return render_template('attribute.html', filtered_penalties=filtered_penalties)
+
+
+@app.route('/filter_enhancements', methods=['POST'])
+def filter_enhancements():
+    min_percent = request.form['min_percent']
+    max_percent = request.form['max_percent']
+    min_level = request.form['min_level']
+    max_level = request.form['max_level']
+
+    filters = []
+
+    if min_percent:
+        filters.append(Enhancement.e_percent >= int(min_percent))
+    if max_percent:
+        filters.append(Enhancement.e_percent <= int(max_percent))
+
+    if min_level:
+        filters.append(Enhancement.e_level >= int(min_level))
+    if max_level:
+        filters.append(Enhancement.e_level <= int(max_level))
+
+    if filters:
+        filtered_enhancements = Enhancement.query.filter(*filters).all()
+    else:
+        filtered_enhancements = Enhancement.query.all()
+
+    return render_template('attribute.html', filtered_enhancements=filtered_enhancements)
+
+def calculate_repair_costs(a_currDur, a_maxDur, a_price, m_repairRate):
+    missing_dur = a_maxDur - a_currDur
+    repaired_dur = m_repairRate * missing_dur
+    total_cost = repaired_dur * (a_price/missing_dur)
+    fixed_durr = a_currDur + repaired_dur
+    return total_cost, fixed_durr
+
+@app.route('/calculator', methods=['GET', 'POST'])
+def calculator():
+
+    distinct_armors = db.session.query(Armor.a_armorKey, Armor.a_armorName) \
+        .join(Loadout, Loadout.l_ArmorKey == Armor.a_armorKey) \
+        .distinct().all()
+        
+    distinct_materials = db.session.query(Material.m_materialKey, Material.m_materialName, Material.m_repairRate) \
+        .join(Armor, Armor.a_materialKey == Material.m_materialKey) \
+        .distinct().all()
+    
+    distinct_traders = db.session.query(Loadout.l_traderKey, Trader.t_traderName) \
+        .join(Trader, Loadout.l_traderKey == Trader.t_traderKey) \
+        .distinct().all()
+    
+    if request.method == 'POST':
+        trader_key = request.form['trader']
+        armor_key = request.form['armor']
+        current_durability = int(request.form['durability'])
+
+        armor = Armor.query.filter_by(a_armorKey=armor_key).first()
+        
+        material = Material.query.filter_by(m_materialKey=armor.a_materialKey).first()
+
+        # Calculation
+        calculation = calculate_repair_costs(current_durability, armor.a_maxDur, armor.a_price, material.m_repairRate)
+        # calculation = calculate_repair_costs(1,2,3,4)
+
+        repair_info = [Trader.query.filter_by(t_traderKey=trader_key).first().t_traderName, armor.a_armorName, material.m_materialName, calculation[1], armor.a_maxDur]
+        # repair_info = [armor.a_armorName, material,3,4,5]
+
+        return render_template(
+            'calculator.html',
+            armors=distinct_armors,
+            traders=distinct_traders,
+            material = distinct_materials,
+            repair_info = repair_info,
+            cost = calculation[0],
+        )
+
+    return render_template('calculator.html', armors=distinct_armors, traders=distinct_traders, material = distinct_materials)
 
 if __name__ == '__main__':
     app.run(debug=True)
