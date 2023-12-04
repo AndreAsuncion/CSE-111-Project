@@ -8,7 +8,7 @@
 </head>
 <body>
     <h1>Calculator</h1>
-    <form action="/repair" method="post">
+    <form action="/calculator" method="post">
         <label for="trader">Select Trader:</label>
         <select name="trader" id="trader">
             <option value="">Trader</option>
@@ -25,32 +25,26 @@
             {% endfor %}
         </select>
 
-        <label for="materials">Materials for this Armor:</label>
-        <select name="material" id="material">
-            <option value="">Material -- Durability</option>
-            {% for material_key, material_name, curr_durr in material %}
-                <option value="{{ material_name }} -- {{ curr_durr }}">{{ material_name }} -- {{ curr_durr }}</option>
-            {% endfor %}
-        </select>
+        <label for="durability">Current Durability:</label>
+        <input type="number" name="durability" id="durability" placeholder="Enter current durability">
     
         <input type="submit" value="Calculate">
     </form>
     
     <h2>Repair Information</h2>
     <label for="rubles">Repair Costs in Rubles</label>
-    <output type="text" name="cost" id="cost"><br>
+    {% if cost %}
+    <output type="text" name="cost" id="cost">{{ cost }}<br>
+    {% endif %}
     
     {% if repair_info %}
     <ul>
-        {% for repair in repair_info %}
-            <li>
-                Trader: {{ repair['trader_name'] }} |
-                Armor: {{ repair['armor_name'] }} |
-                Material: {{ repair['material_name'] }} |
-                Current Durability: {{ repair ['curr_durr']}} |
-                Durability After Repair: {{ repair ['max_durr'] }} |
-            </li>
-        {% endfor %}
+        <li>
+            Trader: {{ repair_info[0] }} |
+            Armor: {{ repair_info[1] }} |
+            Material: {{ repair_info[2] }} |
+            Current Durability: {{ repair_info[3]}} / {{ repair_info[4] }}
+        </li>
     </ul>
 {% else %}
     <p>No loadouts match the selected criteria.</p>
