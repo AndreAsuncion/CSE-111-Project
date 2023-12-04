@@ -148,7 +148,7 @@ def calculator():
     if request.method == 'POST':
         trader_key = request.form['trader']
         armor_key = request.form['armor']
-        current_durability = 0
+        current_durability = request.form['durability']
 
         armor = Armor.query.filter_by(a_armorKey=armor_key).first()
         
