@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attribute Filtering</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="/">Loadouts</a></li>
+            <li><a href="/armor">Armors</a></li>
+            <li><a href="/attribute">Armors</a></li>
+        </ul>
+    </nav>
+
+    <h1>Attribute Filtering</h1>
+
+    <section>
+        <h2>Penalty Filtering</h2>
+        <form action="/filter_penalties" method="post">
+            <label for="movement">Movement:</label>
+            <input type="number" name="min_movement" placeholder="Min" style="width: 100px">
+            <input type="number" name="max_movement" placeholder="Max" style="width: 100px"><br><br>
+        
+            <label for="turning">Turning:</label>
+            <input type="number" name="min_turning" placeholder="Min" style="width: 100px">
+            <input type="number" name="max_turning" placeholder="Max" style="width: 100px"><br><br>
+        
+            <label for="ergo">Ergo:</label>
+            <input type="number" name="min_ergo" placeholder="Min" style="width: 100px">
+            <input type="number" name="max_ergo" placeholder="Max" style="width: 100px"><br><br>
+        
+            <label for="weight">Weight:</label>
+            <input type="number" name="min_weight" placeholder="Min" style="width: 100px">
+            <input type="number" name="max_weight" placeholder="Max" style="width: 100px"><br><br>
+        
+            <input type="submit" value="Filter Penalty">
+        </form>
+    </section>
+
+    <h2>Filtered Penalties</h2>
+    {% if filtered_penalties %}
+        <ul>
+            {% for penalty in filtered_penalties %}
+                <ul>
+                    <li>
+                        Penalty: {{ penalty.p_penaltyName }}
+                        Movement: {{ penalty.p_movement }}
+                        Turning: {{ penalty.p_turning }}
+                        Ergo: {{ penalty.p_ergo }}
+                        Weight: {{ penalty.p_weight }}
+                    </li>
+                </ul>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No penalties match the selected criteria.</p>
+    {% endif %}
+
+    <section>
+        <h2>Enhancement Filtering</h2>
+        <form action="/filter_enhancements" method="post">
+            <label for="percent">Percent:</label>
+            <input type="number" name="min_percent" placeholder="Min" style="width: 100px">
+            <input type="number" name="max_percent" placeholder="Max" style="width: 100px"><br><br>
+
+            <label for="level">Level:</label>
+            <input type="number" name="min_level" placeholder="Min" style="width: 100px">
+            <input type="number" name="max_level" placeholder="Max" style="width: 100px"><br><br>
+
+            <input type="submit" value="Filter Enhancement">
+        </form>
+    </section>
+
+    <h2>Filtered Enhancements</h2>
+    {% if filtered_enhancements %}
+        <ul>
+            {% for enhancement in filtered_enhancements %}
+                <ul>
+                    <li>
+                        Enhancement: {{ enhancement.e_enhancementName }}
+                        Percent: {{ enhancement.e_percent }}
+                        Level: {{ enhancement.e_level }}
+                    </li>
+                </ul>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>No enhancements match the selected criteria.</p>
+    {% endif %}
+
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Armors</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <nav>
+        <ul>
+            <li><a href="/">Loadouts</a></li>
+            <li><a href="/armor">Armors</a></li>
+            <li><a href="/attribute">Armors</a></li>
+            <li><a href="/calculator">Armors</a></li>
+        </ul>
+    </nav>
+
+    <h1>Armors</h1>
+    <form action="/filter_armors" method="post">
+        <label for="trader">Filter by Trader:</label>
+        <select name="trader" id="trader">
+            <option value="">Select Trader</option>
+            {% for trader_key, trader_name in traders %}
+                <option value="{{ trader_key }}">{{ trader_name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="min_durability"> Min Durability:</label>
+        <input type="number" id="min_durability" name="min_durability" style="width: 100px">
+
+        <label for="max_durability"> Max Durability:</label>
+        <input type="number" id="max_durability" name="max_durability" style="width: 100px">
+
+        <label for="min_slots"> Min Slots:</label>
+        <input type="number" name="min_slots" style="width: 100px">
+
+        <label for="max_slots"> Max Slots:</label>
+        <input type="number" name="max_slots" style="width: 100px">
+
+        <label for="min_price"> Min Price:</label>
+        <input type="number" name="min_price" style="width: 100px">
+
+        <label for="max_price"> Max Price:</label>
+        <input type="number" name="max_price" style="width: 100px">
+
+        <label>Filter by Zone:</label>
+        <input type="checkbox" name="zones[]" value="Stomach"> Stomach
+        <input type="checkbox" name="zones[]" value="Thorax"> Thorax
+        <input type="checkbox" name="zones[]" value="Arms"> Arms
+
+        <label for="material_key">Filter by Material:</label>
+        <select name="material_key" id="material_key">
+            <option value="">Select Material</option>
+            {% for material_key, material_name in materials %}
+                <option value="{{ material_key }}" {% if material_key == selected_material %} selected {% endif %}>
+            {{ material_name }}
+            </option>
+            {% endfor %}
+        </select>
+
+        <label for="enhancement_key">Filter by Enhancement:</label>
+        <select name="enhancement_key" id="enhancement_key">
+            <option value="">Select Enhancement</option>
+            {% for enhancement_key, enhancement_name in enhancements %}
+                <option value="{{ enhancement_key }}">{{ enhancement_name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="penalty_key">Filter by Penalty:</label>
+        <select name="penalty_key" id="penalty_key">
+            <option value="">Select Penalty</option>
+            {% for penalty_key, penalty_name in penalties %}
+                <option value="{{ penalty_key }}">{{ penalty_name }}</option>
+            {% endfor %}
+        </select>
+
+
+        <input type="submit" value="Filter">
+    </form>
+
+    <h2>Filtered Armor Information</h2>
+    {% if armor_info %}
+    <ul>
+        {% for armor in armor_info %}
+            <li>
+                Armor: {{ armor['armor_name'] }} |
+                Trader: {{ armor['trader_name'] }} |
+                Max Durability: {{ armor['max_durability'] }} |
+                Slots: {{ armor['slots'] }} |
+                Price: {{ armor['price'] }} |
+                Zone: {{ armor['zone'] }} |
+                Material: {{ armor['material_name'] }} |
+                Enhancement: {{ armor['enhancement_name'] }} |
+                Penalty: {{ armor['penalty_name'] }}
+            </li>
+        {% endfor %}
+    </ul>
+    {% else %}
+    <p>No armors match the selected criteria.</p>
+    {% endif %}
+
+</body>
+</html>
