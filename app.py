@@ -123,8 +123,8 @@ def index():
     
     return render_template('index.html', armors=distinct_armors, traders=distinct_traders, weapons=weapon_names)
 
-@app.route('/repair')
-def repair():
+@app.route('/calculator')
+def calculator():
     distinct_armors = db.session.query(Armor.a_armorKey, Armor.a_armorName) \
         .join(Loadout, Loadout.l_ArmorKey == Armor.a_armorKey) \
         .distinct().all()
