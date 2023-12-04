@@ -96,6 +96,13 @@ class Penalty(db.Model):
         self.p_turning = p_turning
         self.p_ergo = p_ergo
         self.p_weight = p_weight
+        
+def calculate_repair_costs(a_currDur, a_maxDur, a_price, m_repairRate):
+    missing_dur = a_maxDur - a_currDur
+    repaired_dur = m_repairRate * missing_dur
+    total_cost = repaired_dur * (a_price/missing_dur)
+    fixed_durr = a_currDur + repaired_dur
+    return total_cost, fixed_durr
 
 with app.app_context():
     db.create_all()
@@ -128,12 +135,30 @@ def repair():
     distinct_armors = db.session.query(Armor.a_armorKey, Armor.a_armorName) \
         .join(Loadout, Loadout.l_ArmorKey == Armor.a_armorKey) \
         .distinct().all()
+        
+    distinct_materials = db.session.query(Material.m_materialKey, Material.m_materialName, Material.m_repairRate) \
+        .join(Armor, Armor.a_materialKey == Material.m_materialKey) \
+        .distinct().all()
     
     distinct_traders = db.session.query(Loadout.l_traderKey, Trader.t_traderName) \
         .join(Trader, Loadout.l_traderKey == Trader.t_traderKey) \
         .distinct().all()
     
-    return render_template('calculator.html', armors=distinct_armors, traders=distinct_traders)
+    costs = calculate_repair_costs(Armor.a_currDur, Armor.a_maxDur, Armor.a_price, Material.m_repairRate)
+    
+    repair_info = []
+    for repair in repair_info:
+        armor_name = Armor.query.filter_by(a_materialKey=repair.m_materialKey).first().a_armorName
+        trader_name = Trader.query.filter_by(t_traderKey=repair.a_traderKey).first().t_traderName
+        repair.append({
+            'trader_name': trader_name,
+            'armor_name': armor_name,
+            'material_name': Material.m_materialName,
+            'curr_durr': Armor.a_currDur,
+            'max_durr': Armor.a_maxDur,
+        })
+    
+    return render_template('calculator.html', armors=distinct_armors, traders=distinct_traders, material = distinct_materials, cost = costs)
 
 @app.route('/filter_loadouts', methods=['POST'])
 def filter_loadouts():

@@ -8,15 +8,7 @@
 </head>
 <body>
     <h1>Calculator</h1>
-    <form action="/filter_loadouts" method="post">
-        <label for="armor">Select Armor:</label>
-        <select name="armor" id="armor">
-            <option value="">Armor</option>
-            {% for armor_key, armor_name in armors %}
-                <option value="{{ armor_key }}">{{ armor_name }}</option>
-            {% endfor %}
-        </select>
-    
+    <form action="/repair" method="post">
         <label for="trader">Select Trader:</label>
         <select name="trader" id="trader">
             <option value="">Trader</option>
@@ -24,19 +16,39 @@
                 <option value="{{ trader_key }}">{{ trader_name }}</option>
             {% endfor %}
         </select>
+
+        <label for="armor">Select Armor:</label>
+        <select name="armor" id="armor">
+            <option value="">Armor</option>
+            {% for armor_key, armor_name in armors %}
+                <option value="{{ armor_key }}">{{ armor_name }}</option>
+            {% endfor %}
+        </select>
+
+        <label for="materials">Materials for this Armor:</label>
+        <select name="material" id="material">
+            <option value="">Material -- Durability</option>
+            {% for material_key, material_name, curr_durr in material %}
+                <option value="{{ material_name }} -- {{ curr_durr }}">{{ material_name }} -- {{ curr_durr }}</option>
+            {% endfor %}
+        </select>
     
-        <input type="submit" value="Filter">
+        <input type="submit" value="Calculate">
     </form>
     
-    <h2>Filtered Loadout Information</h2>
-    {% if loadout_info %}
+    <h2>Repair Information</h2>
+    <label for="rubles">Repair Costs in Rubles</label>
+    <output type="text" name="cost" id="cost"><br>
+    
+    {% if repair_info %}
     <ul>
-        {% for loadout in loadout_info %}
+        {% for repair in repair_info %}
             <li>
-                Loadout: {{ loadout['loadout_name'] }} |
-                Armor: {{ loadout['armor_name'] }} |
-                Trader: {{ loadout['trader_name'] }} |
-                Weapon: {{ loadout['weapon_name'] }}
+                Trader: {{ repair['trader_name'] }} |
+                Armor: {{ repair['armor_name'] }} |
+                Material: {{ repair['material_name'] }} |
+                Current Durability: {{ repair ['curr_durr']}} |
+                Durability After Repair: {{ repair ['max_durr'] }} |
             </li>
         {% endfor %}
     </ul>
