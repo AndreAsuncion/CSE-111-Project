@@ -1,10 +1,8 @@
-/* Resetting default margin and padding */
 body, h1, h2, h3, h4, h5, h6, ul, ol, li, p, form, label, input, select {
     margin: 0;
     padding: 0;
 }
 
-/* Set a background color and center the content */
 body {
     background-color: #f7f7f7;
     display: flex;
@@ -15,53 +13,83 @@ body {
     font-family: Arial, sans-serif;
 }
 
-/* Title styles */
+nav {
+    background-color: #333;
+    overflow: hidden;
+    position: fixed;
+    top: 0;
+    width: 100%;
+}
+
+nav ul {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+nav ul li {
+    float: left;
+}
+
+nav ul li a {
+    display: block;
+
+    text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+nav ul li a:hover {
+    background-color: #ddd;
+    color: black;
+}
+
 h1 {
     text-align: center;
     margin-bottom: 20px;
     color: #333;
 }
 
-/* Form container */
 form {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
     align-items: center;
+    margin-bottom: 20px;
 }
 
-/* Label styles */
 label {
     margin-right: 10px;
     color: #333;
 }
 
-/* Select dropdown styles */
 select {
     padding: 8px;
     margin-right: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
+    background-color: white;
 }
 
-/* Filter button styles */
 input[type="submit"] {
     padding: 8px 16px;
-    border: none;
+    border: 1px solid #4caf50;
     border-radius: 4px;
     background-color: #4caf50;
     color: white;
     cursor: pointer;
+    transition: background-color 0.3s ease; 
 }
 
 input[type="submit"]:hover {
     background-color: #45a049;
+    color: white;
 }
 
-/* Results container */
 ul {
     list-style-type: none;
     padding: 0;
+    margin-top: 20px;
 }
 
 li {
@@ -70,13 +98,4 @@ li {
     padding: 10px;
     border-radius: 4px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Add margin-bottom to the form and margin-top to the ul */
-form {
-    margin-bottom: 20px; /* Adjust this value as needed */
-}
-
-ul {
-    margin-top: 20px; /* Adjust this value as needed */
 }
