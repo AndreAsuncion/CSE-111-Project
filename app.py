@@ -123,6 +123,18 @@ def index():
     
     return render_template('index.html', armors=distinct_armors, traders=distinct_traders, weapons=weapon_names)
 
+@app.route('/repair')
+def repair():
+    distinct_armors = db.session.query(Armor.a_armorKey, Armor.a_armorName) \
+        .join(Loadout, Loadout.l_ArmorKey == Armor.a_armorKey) \
+        .distinct().all()
+    
+    distinct_traders = db.session.query(Loadout.l_traderKey, Trader.t_traderName) \
+        .join(Trader, Loadout.l_traderKey == Trader.t_traderKey) \
+        .distinct().all()
+    
+    return render_template('calculator.html', armors=distinct_armors, traders=distinct_traders)
+
 @app.route('/filter_loadouts', methods=['POST'])
 def filter_loadouts():
     selected_armor = request.form['armor']

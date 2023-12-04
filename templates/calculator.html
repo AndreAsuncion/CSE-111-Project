@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loadouts</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Calculator</h1>
+    <form action="/filter_loadouts" method="post">
+        <label for="armor">Select Armor:</label>
+        <select name="armor" id="armor">
+            <option value="">Armor</option>
+            {% for armor_key, armor_name in armors %}
+                <option value="{{ armor_key }}">{{ armor_name }}</option>
+            {% endfor %}
+        </select>
+    
+        <label for="trader">Select Trader:</label>
+        <select name="trader" id="trader">
+            <option value="">Trader</option>
+            {% for trader_key, trader_name in traders %}
+                <option value="{{ trader_key }}">{{ trader_name }}</option>
+            {% endfor %}
+        </select>
+    
+        <input type="submit" value="Filter">
+    </form>
+    
+    <h2>Filtered Loadout Information</h2>
+    {% if loadout_info %}
+    <ul>
+        {% for loadout in loadout_info %}
+            <li>
+                Loadout: {{ loadout['loadout_name'] }} |
+                Armor: {{ loadout['armor_name'] }} |
+                Trader: {{ loadout['trader_name'] }} |
+                Weapon: {{ loadout['weapon_name'] }}
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No loadouts match the selected criteria.</p>
+{% endif %}
+
+</body>
+</html>
