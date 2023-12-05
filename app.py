@@ -356,38 +356,49 @@ def calculator():
 
     distinct_armors = db.session.query(Armor.a_armorKey, Armor.a_armorName, Armor.a_maxDur).distinct().all()
     
-    distinct_traders = db.session.query(Trader.t_traderKey, Trader.t_traderName).distinct().all()
+    distinct_traders = db.session.query(Trader.t_traderKey, Trader.t_traderName, Trader.t_repairDescription).distinct().all()
     
     if request.method == 'POST':
-        error = None
+        error = []
         trader_key = request.form['trader']
         armor_key = request.form['armor']
-        current_durability = int(request.form['durability'])
+        current_durability = request.form['durability']
 
-        armor = Armor.query.filter_by(a_armorKey=armor_key).first()
+        # Checking all the fields
+        if not trader_key:
+            error.append('Please select trader')
+        if not armor_key:
+            error.append('Please select armor')
+        if not current_durability.isdigit():
+            current_durability = 0
         
-        material = Material.query.filter_by(m_materialKey=armor.a_materialKey).first()
-
-        if current_durability == armor.a_maxDur:
-            error = 'Cannot repair full armor'
-
-        if error is not None:
+        if error:
             flash(error)
         else:
-            # Calculation
-            calculation = calculate_repair_costs(current_durability, armor.a_maxDur, armor.a_price, material.m_repairRate)
-            # calculation = calculate_repair_costs(1,2,3,4)
+            armor = Armor.query.filter_by(a_armorKey=armor_key).first()
+            
+            material = Material.query.filter_by(m_materialKey=armor.a_materialKey).first()
 
-            repair_info = [Trader.query.filter_by(t_traderKey=trader_key).first().t_traderName, armor.a_armorName, material.m_materialName, calculation[1], armor.a_maxDur]
-            # repair_info = [armor.a_armorName, material,3,4,5]
+            if current_durability == armor.a_maxDur:
+                error.append('Cannot repair full armor')
 
-            return render_template(
-                'calculator.html',
-                armors=distinct_armors,
-                traders=distinct_traders,
-                repair_info = repair_info,
-                cost = calculation[0],
-            )
+            if error:
+                flash(error)
+            else:
+                # Calculation
+                calculation = calculate_repair_costs(current_durability, armor.a_maxDur, armor.a_price, material.m_repairRate)
+                # calculation = calculate_repair_costs(1,2,3,4)
+
+                repair_info = [Trader.query.filter_by(t_traderKey=trader_key).first().t_traderName, armor.a_armorName, material.m_materialName, calculation[1], armor.a_maxDur]
+                # repair_info = [armor.a_armorName, material,3,4,5]
+
+                return render_template(
+                    'calculator.html',
+                    armors=distinct_armors,
+                    traders=distinct_traders,
+                    repair_info = repair_info,
+                    cost = calculation[0],
+                )
 
     return render_template('calculator.html', armors=distinct_armors, traders=distinct_traders)
 
