@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loadouts</title>
+    <title>Calculator</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -32,8 +32,8 @@
         <label for="trader">Select Trader:</label>
         <select name="trader" id="trader">
             <option value="">Trader</option>
-            {% for trader_key, trader_name in traders %}
-                <option value="{{ trader_key }}">{{ trader_name }}</option>
+            {% for trader_key, trader_name, repair_rate in traders %}
+                <option value="{{ trader_key }}">{{ trader_name }} - {{ repair_rate }}</option>
             {% endfor %}
         </select>
 

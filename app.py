@@ -1,15 +1,19 @@
 from flask import Flask, render_template, jsonify, request, flash
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 
 app = Flask(__name__, template_folder='templates', static_url_path='/static', static_folder='static')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tarkov.db' 
 app.config['SECRET_KEY'] = 'She_Jerry_On_My_Wang'
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 class Trader(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     t_traderKey = db.Column(db.Integer, nullable=False) 
     t_traderName = db.Column(db.String(100), unique=True, nullable=False)
+    t_repairRate = db.Column(db.Integer)
+    t_repairDescription = db.Column(db.String(100))
 
     def __init__(self, t_traderKey, t_traderName):
         self.t_traderKey = t_traderKey
@@ -344,19 +348,23 @@ def filter_enhancements():
 
     return render_template('attribute.html', filtered_enhancements=filtered_enhancements)
 
-def calculate_repair_costs(a_currDur, a_maxDur, a_price, m_repairRate):
+def calculate_repair_costs(a_currDur, a_maxDur, a_price, m_repairRate, t_repairRate):
     missing_dur = a_maxDur - a_currDur
-    repaired_dur = m_repairRate * missing_dur
+    repaired_dur = m_repairRate * missing_dur * (t_repairRate / 125)
     total_cost = repaired_dur * (a_price/missing_dur)
     fixed_durr = a_currDur + repaired_dur
-    return total_cost, fixed_durr
+    adj_cost = total_cost * (t_repairRate / 100)
+    return adj_cost, fixed_durr
 
 @app.route('/calculator', methods=['GET', 'POST'])
 def calculator():
 
     distinct_armors = db.session.query(Armor.a_armorKey, Armor.a_armorName, Armor.a_maxDur).distinct().all()
     
-    distinct_traders = db.session.query(Trader.t_traderKey, Trader.t_traderName, Trader.t_repairDescription).distinct().all()
+    distinct_traders = db.session.query(Trader.t_traderKey, Trader.t_traderName, Trader.t_repairDescription) \
+        .filter(Trader.t_repairRate.isnot(None)) \
+        .distinct() \
+        .all()
     
     if request.method == 'POST':
         error = []
@@ -379,17 +387,21 @@ def calculator():
             
             material = Material.query.filter_by(m_materialKey=armor.a_materialKey).first()
 
+            trader = Trader.query.filter_by(t_traderKey=trader_key).first()
+
             if current_durability == armor.a_maxDur:
                 error.append('Cannot repair full armor')
 
             if error:
                 flash(error)
             else:
+                current_durability = int(current_durability)
+
                 # Calculation
-                calculation = calculate_repair_costs(current_durability, armor.a_maxDur, armor.a_price, material.m_repairRate)
+                calculation = calculate_repair_costs(current_durability, armor.a_maxDur, armor.a_price, material.m_repairRate, trader.t_repairRate)
                 # calculation = calculate_repair_costs(1,2,3,4)
 
-                repair_info = [Trader.query.filter_by(t_traderKey=trader_key).first().t_traderName, armor.a_armorName, material.m_materialName, calculation[1], armor.a_maxDur]
+                repair_info = [trader.t_traderName, armor.a_armorName, material.m_materialName, calculation[1], armor.a_maxDur]
                 # repair_info = [armor.a_armorName, material,3,4,5]
 
                 return render_template(
