@@ -1,8 +1,9 @@
-from flask import Flask, render_template, jsonify, request
+from flask import Flask, render_template, jsonify, request, flash
 from flask_sqlalchemy import SQLAlchemy
 
 app = Flask(__name__, template_folder='templates', static_url_path='/static', static_folder='static')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tarkov.db' 
+app.config['SECRET_KEY'] = 'She_Jerry_On_My_Wang'
 db = SQLAlchemy(app)
 
 class Trader(db.Model):
@@ -353,19 +354,12 @@ def calculate_repair_costs(a_currDur, a_maxDur, a_price, m_repairRate):
 @app.route('/calculator', methods=['GET', 'POST'])
 def calculator():
 
-    distinct_armors = db.session.query(Armor.a_armorKey, Armor.a_armorName) \
-        .join(Loadout, Loadout.l_ArmorKey == Armor.a_armorKey) \
-        .distinct().all()
-        
-    distinct_materials = db.session.query(Material.m_materialKey, Material.m_materialName, Material.m_repairRate) \
-        .join(Armor, Armor.a_materialKey == Material.m_materialKey) \
-        .distinct().all()
+    distinct_armors = db.session.query(Armor.a_armorKey, Armor.a_armorName, Armor.a_maxDur).distinct().all()
     
-    distinct_traders = db.session.query(Loadout.l_traderKey, Trader.t_traderName) \
-        .join(Trader, Loadout.l_traderKey == Trader.t_traderKey) \
-        .distinct().all()
+    distinct_traders = db.session.query(Trader.t_traderKey, Trader.t_traderName).distinct().all()
     
     if request.method == 'POST':
+        error = None
         trader_key = request.form['trader']
         armor_key = request.form['armor']
         current_durability = int(request.form['durability'])
@@ -374,23 +368,28 @@ def calculator():
         
         material = Material.query.filter_by(m_materialKey=armor.a_materialKey).first()
 
-        # Calculation
-        calculation = calculate_repair_costs(current_durability, armor.a_maxDur, armor.a_price, material.m_repairRate)
-        # calculation = calculate_repair_costs(1,2,3,4)
+        if current_durability == armor.a_maxDur:
+            error = 'Cannot repair full armor'
 
-        repair_info = [Trader.query.filter_by(t_traderKey=trader_key).first().t_traderName, armor.a_armorName, material.m_materialName, calculation[1], armor.a_maxDur]
-        # repair_info = [armor.a_armorName, material,3,4,5]
+        if error is not None:
+            flash(error)
+        else:
+            # Calculation
+            calculation = calculate_repair_costs(current_durability, armor.a_maxDur, armor.a_price, material.m_repairRate)
+            # calculation = calculate_repair_costs(1,2,3,4)
 
-        return render_template(
-            'calculator.html',
-            armors=distinct_armors,
-            traders=distinct_traders,
-            material = distinct_materials,
-            repair_info = repair_info,
-            cost = calculation[0],
-        )
+            repair_info = [Trader.query.filter_by(t_traderKey=trader_key).first().t_traderName, armor.a_armorName, material.m_materialName, calculation[1], armor.a_maxDur]
+            # repair_info = [armor.a_armorName, material,3,4,5]
 
-    return render_template('calculator.html', armors=distinct_armors, traders=distinct_traders, material = distinct_materials)
+            return render_template(
+                'calculator.html',
+                armors=distinct_armors,
+                traders=distinct_traders,
+                repair_info = repair_info,
+                cost = calculation[0],
+            )
+
+    return render_template('calculator.html', armors=distinct_armors, traders=distinct_traders)
 
 if __name__ == '__main__':
     app.run(debug=True)

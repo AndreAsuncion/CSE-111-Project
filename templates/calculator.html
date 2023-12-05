@@ -17,6 +17,17 @@
     </nav>
     
     <h1>Calculator</h1>
+
+    {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul class="flash-messages">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
     <form action="/calculator" method="post">
         <label for="trader">Select Trader:</label>
         <select name="trader" id="trader">
@@ -29,8 +40,8 @@
         <label for="armor">Select Armor:</label>
         <select name="armor" id="armor">
             <option value="">Armor</option>
-            {% for armor_key, armor_name in armors %}
-                <option value="{{ armor_key }}">{{ armor_name }}</option>
+            {% for armor_key, armor_name, maxDur in armors %}
+                <option value="{{ armor_key }}">{{ armor_name }} - {{ maxDur }}</option>
             {% endfor %}
         </select>
 
