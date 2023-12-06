@@ -4,7 +4,7 @@ from flask_migrate import Migrate
 
 app = Flask(__name__, template_folder='templates', static_url_path='/static', static_folder='static')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tarkov.db' 
-app.config['SECRET_KEY'] = 'She_Jerry_On_My_Wang'
+app.config['SECRET_KEY'] = 'secretKey'
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
