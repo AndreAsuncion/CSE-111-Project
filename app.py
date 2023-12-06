@@ -389,13 +389,18 @@ def calculator():
 
             trader = Trader.query.filter_by(t_traderKey=trader_key).first()
 
+            current_durability = int(current_durability)
+
             if current_durability == armor.a_maxDur:
                 error.append('Cannot repair full armor')
+            
+            if current_durability > armor.a_maxDur:
+                error.append('Durability over max')
 
             if error:
                 flash(error)
             else:
-                current_durability = int(current_durability)
+                
 
                 # Calculation
                 calculation = calculate_repair_costs(current_durability, armor.a_maxDur, armor.a_price, material.m_repairRate, trader.t_repairRate)
