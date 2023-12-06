@@ -4,7 +4,7 @@ from flask_migrate import Migrate
 
 app = Flask(__name__, template_folder='templates', static_url_path='/static', static_folder='static')
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///tarkov.db' 
-app.config['SECRET_KEY'] = 'She_Jerry_On_My_Wang'
+app.config['SECRET_KEY'] = 'secretKey'
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
@@ -354,7 +354,7 @@ def calculate_repair_costs(a_currDur, a_maxDur, a_price, m_repairRate, t_repairR
     total_cost = repaired_dur * (a_price/missing_dur)
     fixed_durr = a_currDur + repaired_dur
     adj_cost = total_cost * (t_repairRate / 100)
-    return adj_cost, fixed_durr
+    return int(adj_cost), fixed_durr
 
 @app.route('/calculator', methods=['GET', 'POST'])
 def calculator():
